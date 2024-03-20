@@ -21,7 +21,7 @@ Route::middleware('auth:sanctum')->resource('user',UserController::class);
 
 
 Route::post('/ping', function(){
-    return response()->json(['status' => 'Sucesso', 'mensagem' => 'Servidor Online'], 200);
+    return response()->json(['status' => 'Success', 'Message' => 'Servidor Online'], 200);
 });
 
 Route::post('/auth', [AuthController::class, 'login']);
