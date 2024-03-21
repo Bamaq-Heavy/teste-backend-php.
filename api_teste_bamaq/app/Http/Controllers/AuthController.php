@@ -32,7 +32,6 @@ class AuthController extends Controller
 
                 //codigo para liberar token twj
                $token = Auth('api')->attempt($credentials);
-               // $token = $request->user()->createToken('token_simples');
 
                 return response()->json(['Status' => 'Success', 'Message' => 'Usuário Autorizado', 'Token JWT' => $token, 'user' => $dataUser], 200 );
             }
