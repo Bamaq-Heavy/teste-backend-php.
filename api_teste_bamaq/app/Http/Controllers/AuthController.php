@@ -19,8 +19,9 @@ class AuthController extends Controller
             $credentials = $request->only('email', 'password');
 
             if(Auth::attempt($credentials)){
-                $user = Auth::user();
+
                 //dataUser utilizado para apresentar dados na resposta de autenticação
+                $user = Auth::user();
                 $dataUser = [
                     'Name'=> $user->name,
                     'CPF' => $user->cpf,
@@ -29,10 +30,11 @@ class AuthController extends Controller
                     'updatedAt' => $user->updated_at,
                 ];
 
-                //cod para gerar token twj
-                $token = $request->user()->createToken('token_simples');
+                //codigo para liberar token twj
+               $token = Auth('api')->attempt($credentials);
+               // $token = $request->user()->createToken('token_simples');
 
-                return response()->json(['Status' => 'Success', 'Message' => 'Usuário Autorizado', 'Token' => $token, 'user' => $dataUser], 200 );
+                return response()->json(['Status' => 'Success', 'Message' => 'Usuário Autorizado', 'Token JWT' => $token, 'user' => $dataUser], 200 );
             }
             else{
                 return response()->json(['Status'=> 'Error','Message' => 'Usuário não pode ser autenticado'], 500);

@@ -16,9 +16,9 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::middleware('auth:sanctum')->resource('user',UserController::class);
 
 
+Route::resource('/user', UserController::class)->middleware('auth.jwt');
 
 Route::post('/ping', function(){
     return response()->json(['status' => 'Success', 'Message' => 'Servidor Online'], 200);
