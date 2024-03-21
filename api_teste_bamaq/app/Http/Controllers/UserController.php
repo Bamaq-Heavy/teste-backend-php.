@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use Exception;
 use Illuminate\Http\Request;
 
 
@@ -33,29 +34,37 @@ class UserController extends Controller
 
     public function store(Request $request)
     {
-        //valida os dados fornecidos
-        $request->validate([
-            'name' => 'required|string',
-            'cpf' => 'required|string',
-            'email' => 'required|email',
-            'password' => 'required|string|min:6'
-        ]);
-        //cria novo usuario no banco
-        $user = User::create([
-            'name' => $request->input('name'),
-            'cpf' => $request->input('cpf'),
-            'email' => $request->input('email'),
-            'password' => bcrypt($request->input('password')),
-        ]);
+        try {
+            //valida os dados fornecidos
+            $request->validate([
+                'name' => 'required|string',
+                'cpf' => 'required|string',
+                'email' => 'required|email',
+                'password' => 'required|string|min:6'
+            ]);
+            //cria novo usuario no banco
+            $user = User::create([
+                'name' => $request->input('name'),
+                'cpf' => $request->input('cpf'),
+                'email' => $request->input('email'),
+                'password' => bcrypt($request->input('password')),
+            ]);
 
-        return response()->json(['Message' => 'Usuário criado com sucesso', 'Usuário' => $user], 200);
+            return response()->json(['Message' => 'Usuário criado com sucesso', 'Usuário' => $user], 200);
+        } catch (Exception) {
+            return response()->json(['Message' => 'Usuário já cadastrado no banco de dados']);
+        }
     }
 
-      public function show(string $id)
+    public function show(string $id)
     {
-        $user = User::findOrFail($id);
+        try {
+            $user = User::findOrFail($id);
+            return response()->json(['Usuário' => $user], 200);
+        } catch (\Exception) {
 
-        return response()->json(['Usuário'=>$user], 200);
+            return response()->json(['Status' => 'Error', 'Message' => 'ID não corresponde a nenhum usuário'], 404);
+        }
     }
 
     public function edit(string $id)
@@ -65,45 +74,64 @@ class UserController extends Controller
 
     public function update(Request $request, string $id)
     {
-        $user = User::findOrFail($id);
+        try {
+            $user = User::findOrFail($id);
 
-        $request->validate([
-            'name' => 'string',
-            'cpf' => 'string',
-            'email' => 'email',
-            'password' => 'string|min:6',
-        ]);
+            //verifica se os dados novos já pertencem a outro usuário cadastrado no banco de dados
+            $existUser = User::where('email', $request->input('email'))
+            ->where('id', '<>', $id)
+            ->first();
 
-        $oldUser = $user->toArray();
+            if($existUser){
+                return response()->json(['Message' => 'Os dados atualizados já pertencem a outro usuário do banco de dados'], 409);
 
-        // Atualiza os dados do usuário
-        $user->update([
-            'name' => $request->input('name'),
-            'cpf' => $request->input('cpf'),
-            'email' => $request->input('email'),
-            'password' => bcrypt($request->input('password')),
-        ]);
+            }
+
+            $request->validate([
+                'name' => 'string',
+                'cpf' => 'string',
+                'email' => 'email',
+                'password' => 'string|min:6',
+            ]);
+
+            $oldUser = $user->toArray();
+
+            // Atualiza os dados do usuário
+            $user->update([
+                'name' => $request->input('name'),
+                'cpf' => $request->input('cpf'),
+                'email' => $request->input('email'),
+                'password' => bcrypt($request->input('password')),
+            ]);
 
 
-        return response()->json(['Message' => 'Usuário atualizado com sucesso',
-         "Dados Antigo"  => $oldUser, 'Dados Atualizado' => $user], 200);
+            return response()->json([
+                'Message' => 'Usuário atualizado com sucesso',
+                "Dados Antigo"  => $oldUser, 'Dados Atualizado' => $user
+            ], 200);
+        } catch (Exception) {
+            return response()->json(['Message' => 'ID não corresponde a nenhum usuário no banco de dados']);
+        }
     }
 
     public function destroy(string $id)
     {
-        //busca o usuário pelo id
-        $user = User::findOrFail($id);
+        try {
+            //busca o usuário pelo id
+            $user = User::findOrFail($id);
 
-        //usuario que será deletado
-        $userDeleted = $user->toArray();
+            //usuario que será deletado
+            $userDeleted = $user->toArray();
 
-        //exclui o usuario
-        $user->delete();
+            //exclui o usuario
+            $user->delete();
 
-        return response()->json([
-            'Message' => 'Usuário excluído com sucesso',
-            'Usuário' => $userDeleted,
-        ], 200);
-
+            return response()->json([
+                'Message' => 'Usuário excluído com sucesso',
+                'Usuário' => $userDeleted,
+            ], 200);
+        } catch (Exception) {
+            return response()->json(['Message' => 'ID não corresponde a nenhum usuário']);
+        }
     }
 }
